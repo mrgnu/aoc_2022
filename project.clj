@@ -1,0 +1,7 @@
+(defproject aoc_2022 "0.1.0-SNAPSHOT"
+  :description "FIXME: write description"
+  :url "http://github.com/mrgnu"
+  :license {:name "N/A"
+            :url ""}
+  :dependencies [[org.clojure/clojure "1.11.1"]]
+  :repl-options {:init-ns aoc-2022.core})

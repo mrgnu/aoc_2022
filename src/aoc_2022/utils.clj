@@ -1,4 +1,4 @@
-(ns aoc-2021.utils)
+(ns aoc-2022.utils)
 
 (defn per-line-input [fn]
   (with-open [rdr (clojure.java.io/reader fn)]

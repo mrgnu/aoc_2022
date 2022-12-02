@@ -1,4 +1,4 @@
-(ns aoc-2021.day-TEMPLATE-test
+(ns aoc-2022.day-TEMPLATE-test
   (:require [clojure.test :refer :all]
             [aoc-2022.day-TEMPLATE :refer :all]))
 

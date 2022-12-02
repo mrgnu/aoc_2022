@@ -1,4 +1,4 @@
-(ns aoc-2021.day-1
+(ns aoc-2022.day-1
   (:require [aoc-2022.utils :as utils])
   )
 

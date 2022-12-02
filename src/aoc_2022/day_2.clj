@@ -30,8 +30,8 @@
      :me       (get sym-map b)
      }))
 
-(defn parse-input [lines]
-  (map parse-line lines)
+(defn parse-input [line-parser lines]
+  (map line-parser lines)
   )
 
 (def shape-score-map
@@ -73,7 +73,8 @@
 
 (defn part-1 [input]
   (->> input
-       parse-input
+       (parse-input parse-line)
+       compute-scores))
        compute-scores))
 
 (defn day-2-1 []

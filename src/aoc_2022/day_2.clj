@@ -51,6 +51,33 @@
 (defn- is-win? [me opponent]
   (= me (opponent win-map)))
 
+(defn- achieve-outcome [opponent outcome]
+  (condp = outcome
+    :draw opponent
+    :win  (win-map opponent)
+    :lose (-> (keys win-map)
+              set
+              (disj opponent)
+              (disj (opponent win-map))
+              first)))
+
+(def strategy-map
+  {
+   \X :lose
+   \Y :draw
+   \Z :win
+   })
+
+(defn- strategy-parser [line]
+  (let [[a _ b] line
+        opponent (get sym-map a)
+        strategy (get strategy-map b)
+        me       (achieve-outcome opponent strategy)]
+    {
+     :opponent opponent
+     :me       me
+     }))
+
 (defn- result-score [round]
   (let [o (:opponent round)
         m (:me       round)]
@@ -75,12 +102,16 @@
   (->> input
        (parse-input parse-line)
        compute-scores))
+
+(defn part-2 [input]
+  (->> input
+       (parse-input strategy-parser)
        compute-scores))
 
 (defn day-2-1 []
-  ;;; 14827
   (part-1 (input-2-1))
   )
 
 (defn day-2-2 []
+  (part-2 (input-2-1))
   )

@@ -33,6 +33,17 @@
 (defn- get-duplicate [bag-sets]
   (first (clojure.set/intersection (first bag-sets) (second bag-sets))))
 
+(defn- group-bags [lines]
+  (->> lines
+       (partition 3)
+       (map (partial map set))))
+
+(defn- find-badge [bag-group]
+  (first (apply clojure.set/intersection bag-group)))
+
+(defn- find-badges [bag-groups]
+  (map find-badge bag-groups))
+
 (defn part-1 [input]
   (->> input
        (map compartmentalize-line)
@@ -40,8 +51,15 @@
        (map get-priority)
        (apply +)))
 
+(defn part-2 [input]
+  (->> input
+       group-bags
+       find-badges
+       (map get-priority)
+       (apply +)))
+
 (defn day-3-1 []
   (part-1 (input-3-1)))
 
 (defn day-3-2 []
-  )
+  (part-2 (input-3-1)))

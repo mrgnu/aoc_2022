@@ -30,10 +30,20 @@
     (or (empty? (clojure.set/difference s1 s2))
         (empty? (clojure.set/difference s2 s1)))))
 
+(defn- some-overlap? [section-pair]
+  (let [[s1 s2] (map set section-pair)]
+    (not (empty? (clojure.set/intersection s1 s2)))))
+
 (defn part-1 [input]
   (->> input
        (map parse-section-pair)
        (filter total-overlap?)
+       count))
+
+(defn part-2 [input]
+  (->> input
+       (map parse-section-pair)
+       (filter some-overlap?)
        count))
 
 (defn day-4-1 []
@@ -41,4 +51,5 @@
   )
 
 (defn day-4-2 []
+  (part-2 (input-4-1))
   )

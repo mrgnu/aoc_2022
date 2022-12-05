@@ -65,7 +65,7 @@
 (defn- parse-move [line]
   (let [[_ tower from to] (re-matches #"move (\d+) from (\d+) to (\d+)" line)]
     {
-     :count (Integer. tower)
+     :to-move (Integer. tower)
      :from (keyword from)
      :to (keyword to)
      }))
@@ -74,7 +74,7 @@
   (map parse-move lines))
 
 (defn- one-at-the-time-executor [tower-map move]
-  (let [{:keys [count from to]} move]
+  (let [{:keys [to-move from to]} move]
     (reduce (fn [tower-map _]
               (let [crate (last (from tower-map))]
                 (-> tower-map
@@ -82,7 +82,7 @@
                     (update ,,, to #(conj % crate))
                     )))
             tower-map
-            (range count))))
+            (range to-move))))
 
 (defn- execute-moves [move-executor tower-map moves]
   (reduce move-executor

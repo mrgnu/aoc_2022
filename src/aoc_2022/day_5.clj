@@ -84,6 +84,17 @@
             tower-map
             (range to-move))))
 
+(defn- all-at-once-executor [tower-map move]
+  (let [{:keys [to-move from to]} move
+        from-crates (from tower-map)
+        rem         (- (count from-crates) to-move)
+        crates      (vec (drop rem from-crates))
+        from-crates (vec (take rem from-crates))
+        to-crates   (vec (concat (to tower-map) crates))]
+    (-> tower-map
+        (assoc ,,, from from-crates)
+        (assoc ,,, to   to-crates))))
+
 (defn- execute-moves [move-executor tower-map moves]
   (reduce move-executor
           tower-map
@@ -106,9 +117,15 @@
        (execute-drawing one-at-the-time-executor)
        get-top-states))
 
+(defn part-2 [input]
+  (->> input
+       (execute-drawing all-at-once-executor)
+       get-top-states))
+
 (defn day-5-1 []
   (part-1 (input-5-1))
   )
 
 (defn day-5-2 []
+  (part-2 (input-5-1))
   )

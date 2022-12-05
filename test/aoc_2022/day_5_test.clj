@@ -9,6 +9,7 @@
       )
 
     (testing "part 2"
+      (is (= "MCD" (part-2 test-input-5-1)))
       )
     ))
 
@@ -21,5 +22,6 @@
       )
 
     (testing "part 2"
+      (is (= "TPFFBDRJD" (day-5-2)))
       )
     ))

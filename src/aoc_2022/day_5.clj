@@ -73,7 +73,7 @@
 (defn- parse-moves [lines]
   (map parse-move lines))
 
-(defn- execute-move [tower-map move]
+(defn- one-at-the-time-executor [tower-map move]
   (let [{:keys [count from to]} move]
     (reduce (fn [tower-map _]
               (let [crate (last (from tower-map))]
@@ -84,15 +84,15 @@
             tower-map
             (range count))))
 
-(defn- execute-moves [tower-map moves]
-  (reduce execute-move
+(defn- execute-moves [move-executor tower-map moves]
+  (reduce move-executor
           tower-map
           moves))
 
-(defn- execute-drawing [input]
+(defn- execute-drawing [move-executor input]
   (let [tower-map (parse-cargo-state (get-cargo-state input))
         moves     (parse-moves (get-moves input))]
-    (execute-moves tower-map moves)))
+    (execute-moves move-executor tower-map moves)))
 
 (defn- get-top-states [tower-map]
   (let [sorted-keys (->> tower-map keys sort)]
@@ -103,7 +103,7 @@
 
 (defn part-1 [input]
   (->> input
-       execute-drawing
+       (execute-drawing one-at-the-time-executor)
        get-top-states))
 
 (defn day-5-1 []

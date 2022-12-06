@@ -35,9 +35,16 @@
          (find-msg msg-size)
          )))
 
+(defn part-2 [input]
+  (let [msg-size 14]
+    (->> input
+         (find-msg msg-size)
+         )))
+
 (defn day-6-1 []
   (part-1 (input-6-1))
   )
 
 (defn day-6-2 []
+  (part-2 (input-6-1))
   )

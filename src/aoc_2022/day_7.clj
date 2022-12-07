@@ -163,9 +163,29 @@
          (filter (partial >= 100000))
          (apply +))))
 
+(defn part-2 [input]
+  (let [update-size    30000000
+        disk-size      70000000
+        root           (-> input parse-input build-file-tree (get "/") determine-dir-sizes)
+        used           (:rec-size root)
+        unused         (- disk-size used)
+        required-extra (- update-size unused)]
+    (println "used  " used)
+    (println "unused" unused)
+    (println "extra"  required-extra)
+    (->> root
+         (tree-seq (constantly true) child-dirs)
+         (map (fn [dir] [(:name dir) (:rec-size dir)]))
+         (sort-by second)
+         (drop-while (comp (partial > required-extra) second))
+         first
+         second
+         )))
+
 (defn day-7-1 []
   (part-1 (input-7-1))
   )
 
 (defn day-7-2 []
+  (part-2 (input-7-1))
   )

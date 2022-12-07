@@ -16,16 +16,16 @@
        (partition msg-size 1)
        (map-indexed vector)))
 
-(defn- all-same [block]
+(defn- all-different [block]
   (let [chars (second block)]
-    (= (count chars)
-       (count (set chars)))))
+    (when (= (count chars)
+             (count (set chars)))
+      block)))
 
 (defn find-msg [msg-size input]
   (->> input
        (get-blocks msg-size)
-       (filter all-same)
-       first
+       (some all-different)
        first
        (+ msg-size)))
 

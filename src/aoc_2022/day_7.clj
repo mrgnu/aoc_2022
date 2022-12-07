@@ -170,9 +170,6 @@
         used           (:rec-size root)
         unused         (- disk-size used)
         required-extra (- update-size unused)]
-    (println "used  " used)
-    (println "unused" unused)
-    (println "extra"  required-extra)
     (->> root
          (tree-seq (constantly true) child-dirs)
          (map (fn [dir] [(:name dir) (:rec-size dir)]))

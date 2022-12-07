@@ -135,30 +135,28 @@
        child-dir-names
        (map (partial get dir))))
 
-(defn- file-sizes [files]
-  (->> files (map :size) (apply +)))
-
 ;; recursively populates dir with :rec-size
 (defn determine-dir-sizes [dir]
   (let [file-size-sum (->> dir :files (map :size) (apply +))
-        dir-names     (->> dir keys (filter string?))
         dir           (reduce (fn [dir dir-name]
-                                (assoc dir
-                                       dir-name
-                                       (determine-dir-sizes (get dir dir-name))))
+                                (update dir
+                                        dir-name
+                                        determine-dir-sizes))
                               dir
-                              dir-names)
-        dir-size-sum  (->> dir-names
-                           (map (partial get dir))
+                              (child-dir-names dir))
+        dir-size-sum  (->> (child-dirs dir)
                            (map #(get % :rec-size))
                            (apply +))
         total-size    (+ dir-size-sum file-size-sum)]
     (assoc dir :rec-size total-size)))
 
+(defn- dir-seq [dir]
+  (tree-seq (constantly true) child-dirs dir))
+
 (defn part-1 [input]
   (let [root (-> input parse-input build-file-tree (get "/") determine-dir-sizes)]
     (->> root
-         (tree-seq (constantly true) child-dirs)
+         dir-seq
          (map :rec-size)
          (filter (partial >= 100000))
          (apply +))))
@@ -171,11 +169,10 @@
         unused         (- disk-size used)
         required-extra (- update-size unused)]
     (->> root
-         (tree-seq (constantly true) child-dirs)
-         (map (fn [dir] [(:name dir) (:rec-size dir)]))
+         dir-seq
+         (map (fn [{:keys [name rec-size]}] [name rec-size]))
          (sort-by second)
-         (drop-while (comp (partial > required-extra) second))
-         first
+         (some #(when (>= (second %) required-extra) %))
          second
          )))
 

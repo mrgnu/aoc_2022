@@ -26,13 +26,17 @@
 (defn get-edge-tree-count [{:keys [w h]}]
   (- (* 2 (+ w h)) 4))
 
-(defn- get-coords [{:keys [w h]}]
+(defn- get-coords [x-range y-range]
   (into #{}
-        (let [x-range (range 1 w)
-              y-range (range 1 h)]
-          (for [x (range 1 (dec w))
-                y (range 1 (dec h))]
-            (make-coord x y)))))
+        (for [x x-range
+              y y-range]
+          (make-coord x y))))
+
+(defn- get-inner-coords [{:keys [w h]}]
+  (get-coords (range 1 (dec w)) (range 1 (dec h))))
+
+(defn- get-full-coords [{:keys [w h]}]
+  (get-coords (range w) (range h)))
 
 (defn get-adjacent [{:keys [x y]}]
   #{
@@ -93,7 +97,7 @@
         (tallest? below))))
 
 (defn get-interior-visible-tree-count [tree-map map-size]
-  (->> (get-coords map-size)
+  (->> (get-inner-coords map-size)
        (map (partial tree-visible? tree-map map-size))
        (filter true?)
        count

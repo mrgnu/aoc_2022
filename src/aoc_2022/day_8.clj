@@ -103,15 +103,35 @@
        count
        ))
 
+(defn get-scenic-score [tree-map map-size coord]
+  (let [{:keys [left right above below]} (get-tree-rows tree-map map-size coord)
+        height (get tree-map coord)
+        view-distance (fn [tree-heights]
+                        (let [n (->> tree-heights (take-while #(< % height)) count)]
+                          (if (= n (count tree-heights)) n (inc n))))]
+    (->> [left right above below]
+         (map view-distance)
+         (apply *))))
+
 (defn part-1 [input]
   (let [map-size (get-map-size input)
         tree-map (parse-map input)]
     (+ (get-edge-tree-count map-size)
        (get-interior-visible-tree-count tree-map map-size))))
 
+(defn part-2 [input]
+  (let [map-size (get-map-size input)
+        tree-map (parse-map input)
+        coords   (get-full-coords map-size)]
+    (->> coords
+         (map (partial get-scenic-score tree-map map-size))
+         sort
+         last)))
+
 (defn day-8-1 []
   (part-1 (input-8-1))
   )
 
 (defn day-8-2 []
+  (part-2 (input-8-1))
   )

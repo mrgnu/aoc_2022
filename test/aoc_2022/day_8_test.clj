@@ -26,6 +26,13 @@
       )
 
     (testing "part 2"
+      (let [input test-input-8-1
+            map-size (get-map-size input)
+            tree-map (-> input parse-map)]
+        (is (= 4 (get-scenic-score tree-map map-size (make-coord 2 1))))
+        (is (= 8 (get-scenic-score tree-map map-size (make-coord 2 3))))
+        (is (= 8 (part-2 test-input-8-1)))
+        )
       )
     ))
 
@@ -36,5 +43,6 @@
       )
 
     (testing "part 2"
+      (is (= 287040 (day-8-2)))
       )
     ))

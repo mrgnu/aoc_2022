@@ -60,17 +60,33 @@
                         (parse-map-row row y)))
                {})))
 
-(defn tree-visible? [tree-map
-                     {:keys [w h] :as map-size}
-                     {:keys [x y] :as coord}]
+(defn- get-tree-heights [tree-map coords]
+  (map (partial get tree-map) coords))
+
+(defn- get-tree-rows [tree-map
+                      {:keys [w h] :as map-size}
+                      {:keys [x y] :as coord}]
   (let [row      (->> (map #(make-coord % y) (range 0 w)))
-        left     (take x row)
-        right    (drop (inc x) row)
         col      (->> (map #(make-coord x %) (range 0 h)))
+        left     (take x row)
+        left     (get-tree-heights tree-map (reverse left))
+        right    (drop (inc x) row)
+        right    (get-tree-heights tree-map right)
         above    (take y col)
+        above    (get-tree-heights tree-map (reverse above))
         below    (drop (inc y) col)
+        below    (get-tree-heights tree-map below)]
+    {
+     :left  left
+     :right right
+     :above above
+     :below below
+     }))
+
+(defn tree-visible? [tree-map map-size coord]
+  (let [{:keys [left right above below]} (get-tree-rows tree-map map-size coord)
         height   (get tree-map coord)
-        smaller? (fn [trees] (every? #(< (get tree-map %) height) trees))]
+        smaller? (fn [tree-heights] (every? #(< % height) tree-heights))]
     (or (smaller? left)
         (smaller? right)
         (smaller? above)

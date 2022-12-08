@@ -86,11 +86,11 @@
 (defn tree-visible? [tree-map map-size coord]
   (let [{:keys [left right above below]} (get-tree-rows tree-map map-size coord)
         height   (get tree-map coord)
-        smaller? (fn [tree-heights] (every? #(< % height) tree-heights))]
-    (or (smaller? left)
-        (smaller? right)
-        (smaller? above)
-        (smaller? below))))
+        tallest? (fn [tree-heights] (every? #(< % height) tree-heights))]
+    (or (tallest? left)
+        (tallest? right)
+        (tallest? above)
+        (tallest? below))))
 
 (defn get-interior-visible-tree-count [tree-map map-size]
   (->> (get-coords map-size)

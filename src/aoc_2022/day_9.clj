@@ -14,6 +14,18 @@
    "R 2"
    ])
 
+(def test-input-9-2
+  [
+   "R 5"
+   "U 8"
+   "L 8"
+   "D 3"
+   "R 17"
+   "D 10"
+   "L 25"
+   "U 20"
+   ])
+
 (defn input-9-1 []
   (->> "resources/day_9_1.txt"
        utils/per-line-input))
@@ -68,33 +80,53 @@
                            vec)]
             (move-by tail-pos delta))))))
 
-(defn- perform-move [{:keys [head-pos tail-pos tail-positions] :as state}
+(defn move-knots [head-pos knot-positions]
+  (drop 1
+        (reduce (fn [e knot]
+                  (let [h (last e)]
+                    (conj e (move-tail h knot))))
+                [head-pos]
+                knot-positions)))
+
+(defn- perform-move [{:keys [head-pos knot-positions tail-positions] :as state}
                      move]
-  (let [head-pos (move-head head-pos move)
-        tail-pos (move-tail head-pos tail-pos)]
+  (let [head-pos  (move-head head-pos move)
+        knots     (move-knots head-pos knot-positions)
+        tail-pos  (last knots)]
     (-> state
-        (assoc ,,, :head-pos head-pos)
-        (assoc ,,, :tail-pos tail-pos)
+        (assoc ,,,  :head-pos       head-pos)
+        (assoc ,,,  :knot-positions knots)
         (update ,,, :tail-positions conj tail-pos))))
 
-(defn perform-moves [moves]
-  (let [state {
-               :head-pos       (make-pos 0 0)
-               :tail-pos       (make-pos 0 0)
+(defn perform-moves [knot-count moves]
+  (let [head-pos (make-pos 0 0)
+        state {
+               :head-pos       head-pos
+               :knot-positions (take knot-count (repeat head-pos))
                :tail-positions #{}
                }]
     (reduce perform-move state moves)))
 
 (defn part-1 [input]
-  (->> input
-       parse-moves
-       perform-moves
-       :tail-positions
-       count))
+  (let [knot-count 1]
+    (->> input
+         parse-moves
+         (perform-moves knot-count)
+         :tail-positions
+         count)))
+
+(defn part-2 [input]
+  (let [knot-count 9]
+    (->> input
+         parse-moves
+         (perform-moves knot-count)
+         :tail-positions
+         count)))
 
 (defn day-9-1 []
   (part-1 (input-9-1))
   )
 
 (defn day-9-2 []
+  (part-2 (input-9-1))
   )

@@ -9,6 +9,8 @@
       )
 
     (testing "part 2"
+      (is (= 1 (part-2 test-input-9-1)))
+      (is (= 36 (part-2 test-input-9-2)))
       )
     ))
 

@@ -75,6 +75,28 @@
       (:cycle-count ((:name instr) instruction-data-map))
       0)))
 
+(defn- run-cycle [runtime instrs]
+  ;; instruction not done
+  (if (< (:instr-cycle runtime) (cycle-count runtime))
+    [(-> runtime
+         (update ,,, :clock inc)
+         (update ,,, :instr-cycle inc))
+     instrs]
+    (let [
+          ;; current instruction done - update runtime 
+          runtime (perform-instruction runtime)
+          ;; get next instruction
+          [instr & instrs] instrs]
+      (if-not instr
+        ;; program done
+        [runtime instrs]
+        ;; set new instruction in runtime
+        [(-> runtime
+                   (update ,,, :clock       inc)
+                   (assoc  ,,, :instr-cycle 1)
+                   (assoc  ,,, :instr       instr))
+         instrs]))))
+
 (defn run-program
   ([runtime instrs] (run-program runtime instrs Long/MAX_VALUE))
   ([runtime instrs clock-count]
@@ -82,28 +104,8 @@
           instrs  instrs]
      (if (= clock-count (:clock runtime))
        [runtime instrs]
-       ;; instruction not done
-       (if (< (:instr-cycle runtime) (cycle-count runtime))
-         (recur (-> runtime
-                    (update ,,, :clock inc)
-                    (update ,,, :instr-cycle inc))
-                instrs)
-         (let [
-               ;; current instruction done - update runtime 
-               runtime (perform-instruction runtime)
-               ;; get next instruction
-               [instr & instrs] instrs]
-           (if-not instr
-             ;; program done
-             [runtime instrs]
-             ;; set new instruction in runtime
-             (recur (-> runtime
-                        (update ,,, :clock       inc)
-                        (assoc  ,,, :instr-cycle 1)
-                        (assoc  ,,, :instr       instr))
-                    instrs)))))
-     )
-   ))
+       (let [[runtime instrs] (run-cycle runtime instrs)]
+         (recur runtime instrs))))))
 
 (defn get-signal-strength-sum [instrs]
   (loop [[cycle-count & cycle-counts] [20 60 100 140 180 220]
@@ -120,6 +122,23 @@
                  runtime
                  instrs
                  signal-strengths))))))
+
+(defn print-rows [rows]
+  (->> rows
+       (partition 40)
+       (map (partial apply str))))
+
+(defn render-program [instrs]
+  (loop [runtime (make-runtime)
+         instrs  instrs
+         rows    ""]
+    (if-not instrs
+      (print-rows rows)
+      (let [[runtime instrs] (run-cycle runtime instrs)
+            X (get-in runtime [:regs :X])
+            x (mod (dec (:clock runtime)) 40)
+            p (if (<= (dec X) x (inc X)) "#" ".")]
+        (recur runtime instrs (str rows p))))))
 
 (defn day-10-1 []
   (get-signal-strength-sum (parse-instructions (input-10-1)))

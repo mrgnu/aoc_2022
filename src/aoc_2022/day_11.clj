@@ -177,9 +177,26 @@
          (apply *)
          )))
 
+(defn part-2 [input]
+  (let [rounds          10000
+        monkeys         (->> input read-monkeys)
+        divisors        (->> monkeys vals (map :div-by))
+        div-prod        (apply * divisors)
+        worry-reduction (fn [v] (mod v div-prod))]
+    (->> monkeys
+         (throw-rounds worry-reduction rounds)
+         vals
+         (sort-by :inspection-count)
+         (reverse)
+         (take 2)
+         (map :inspection-count)
+         (apply *)
+         )))
+
 (defn day-11-1 []
   (part-1 (input-11-1))
   )
 
 (defn day-11-2 []
+  (part-2 (input-11-1))
   )

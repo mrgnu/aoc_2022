@@ -138,11 +138,11 @@
 (defn- find-target [{:keys [div-by if-id else-id]} worry]
   (if (zero? (mod worry div-by)) if-id else-id))
 
-(defn throw-item [mm monkey-id]
+(defn throw-item [worry-reduction mm monkey-id]
   (let [{:keys [items op] :as monkey} (monkey-id mm)
         [item & items]                items
         worry                         (eval-operation {:old item} op)
-        worry                         (long (/ worry 3))
+        worry                         (worry-reduction worry)
         target                        (find-target monkey worry)]
     (-> mm
         (update-in ,,, [monkey-id :inspection-count] inc)
@@ -150,32 +150,32 @@
         (update-in ,,, [target    :items] conj worry)
         )))
 
-(defn throw-items [mm monkey-id]
+(defn throw-items [worry-reduction mm monkey-id]
   (loop [mm mm]
     (if (empty? (get-in mm [monkey-id :items]))
       mm
-      (recur (throw-item mm monkey-id)))))
+      (recur (throw-item worry-reduction mm monkey-id)))))
 
-(defn throw-round [mm]
+(defn throw-round [worry-reduction mm]
   (let [monkey-ids (-> mm keys sort)]
-    (reduce throw-items mm monkey-ids)))
+    (reduce (partial throw-items worry-reduction) mm monkey-ids)))
 
-(defn throw-rounds [n mm]
-  (reduce (fn [mm _] (throw-round mm))
-          mm
-          (range n)))
+(defn throw-rounds [worry-reduction n mm]
+  (nth (iterate (partial throw-round worry-reduction) mm) n))
 
 (defn part-1 [input]
-  (->> input
-       read-monkeys
-       (throw-rounds 20)
-       vals
-       (sort-by :inspection-count)
-       (reverse)
-       (take 2)
-       (map :inspection-count)
-       (apply *)
-       ))
+  (let [worry-reduction (fn [worry] (long (/ worry 3)))
+        rounds          20]
+    (->> input
+         read-monkeys
+         (throw-rounds worry-reduction rounds)
+         vals
+         (sort-by :inspection-count)
+         (reverse)
+         (take 2)
+         (map :inspection-count)
+         (apply *)
+         )))
 
 (defn day-11-1 []
   (part-1 (input-11-1))

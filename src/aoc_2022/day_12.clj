@@ -79,17 +79,20 @@
   (+ (abs (- tx fx))
      (abs (- ty fy))))
 
+(defn- get-steps [height-map start-pos end-pos]
+  (->> (a-star/a-star start-pos
+                      end-pos
+                      (fn [_ _] 1)
+                      manhattan-heuristic
+                      (partial get-neighbors height-map))
+       count
+       dec
+       )
+  )
+
 (defn part-1 [input]
   (let [{:keys [height-map start-pos end-pos]} (read-map input)]
-    (->> (a-star/a-star start-pos
-                        end-pos
-                        (fn [_ _] 1)
-                        manhattan-heuristic
-                        (partial get-neighbors height-map))
-         count
-         dec
-         )
-    ))
+    (get-steps height-map start-pos end-pos)))
 
 (defn day-12-1 []
   (part-1 (input-12-1))

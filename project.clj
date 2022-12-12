@@ -3,5 +3,7 @@
   :url "http://github.com/mrgnu"
   :license {:name "N/A"
             :url ""}
-  :dependencies [[org.clojure/clojure "1.11.1"]]
+  :dependencies [[org.clojure/clojure "1.11.1"]
+                 [org.clojure/data.priority-map "1.1.0"]
+                 ]
   :repl-options {:init-ns aoc-2022.core})

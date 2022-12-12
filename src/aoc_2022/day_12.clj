@@ -80,14 +80,17 @@
      (abs (- ty fy))))
 
 (defn- get-steps [height-map start-pos end-pos]
-  (->> (a-star/a-star start-pos
-                      end-pos
-                      (fn [_ _] 1)
-                      manhattan-heuristic
-                      (partial get-neighbors height-map))
-       count
-       dec
-       )
+  (try
+    (->> (a-star/a-star start-pos
+                        end-pos
+                        (fn [_ _] 1)
+                        manhattan-heuristic
+                        (partial get-neighbors height-map))
+         count
+         dec
+         )
+    (catch Throwable e nil)
+    )
   )
 
 (defn part-1 [input]

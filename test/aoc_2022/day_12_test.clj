@@ -9,6 +9,7 @@
       )
 
     (testing "part 2"
+      (is (= 29 (part-2 test-input-12-1)))
       )
     ))
 

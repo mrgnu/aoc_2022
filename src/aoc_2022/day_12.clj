@@ -97,9 +97,20 @@
   (let [{:keys [height-map start-pos end-pos]} (read-map input)]
     (get-steps height-map start-pos end-pos)))
 
+(defn part-2 [input]
+  (let [{:keys [height-map end-pos]} (read-map input)
+        start-positions (->> height-map (filter (comp zero? val)) (map key))]
+    (->> start-positions
+         (map (fn [start-pos] (get-steps height-map start-pos end-pos)))
+         (filter identity)
+         sort
+         first
+         )))
+
 (defn day-12-1 []
   (part-1 (input-12-1))
   )
 
 (defn day-12-2 []
+  (part-2 (input-12-1))
   )

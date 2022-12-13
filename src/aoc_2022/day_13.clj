@@ -37,7 +37,6 @@
   (->> lines
        (filter (comp not empty?))
        (map clojure.edn/read-string)
-       (partition 2)
        )
   )
 
@@ -46,6 +45,8 @@
     (= a b) :undetermined
     (< a b) :valid
     :else   :invalid))
+
+(declare valid-packet?)
 
 (defn- valid-lists? [[a b]]
   (let [rs (map (fn [a b] (valid-packet? [a b])) a b)
@@ -57,18 +58,24 @@
         :else                   :undetermined)
         r)))
 
-(defn valid-packet? [[a b]]
-  (if (= (vector? a) (vector? b))
-    (if (vector? a)
-      (valid-lists? [a b])
-      (valid-numbers? [a b]))
-    (if (vector? a)
-      (valid-packet? [a   [b]])
-      (valid-packet? [[a] b]))))
+(defn valid-packet?
+  ([a b] (valid-packet? [a b]))
+
+  ([[a b]]
+   (if (= (vector? a) (vector? b))
+     (if (vector? a)
+       (valid-lists? [a b])
+       (valid-numbers? [a b]))
+     (if (vector? a)
+       (valid-packet? [a   [b]])
+       (valid-packet? [[a] b])))
+   )
+  )
 
 (defn part-1 [input]
   (->> input
        parse-input
+       (partition 2)
        (map-indexed vector)
        (filter (comp (partial = :valid) valid-packet? second))
        (map first)

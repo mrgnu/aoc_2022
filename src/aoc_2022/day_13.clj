@@ -84,9 +84,23 @@
        )
   )
 
+(defn part-2 [input]
+  (let [divider-packets [[[2]] [[6]]]
+        packets (concat (parse-input input) divider-packets)]
+    (->> packets
+         (sort (comp (partial = :valid) valid-packet?))
+         (map-indexed vector)
+         (filter (partial some (set divider-packets)))
+         (map first)
+         (map inc)
+         (apply *)
+         )
+    ))
+
 (defn day-13-1 []
   (part-1 (input-13-1))
   )
 
 (defn day-13-2 []
+  (part-2 (input-13-1))
   )

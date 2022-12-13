@@ -9,6 +9,7 @@
       )
 
     (testing "part 2"
+      (is (= 140 (part-2 test-input-13-1)))
       )
     ))
 
@@ -19,5 +20,6 @@
       )
 
     (testing "part 2"
+      (is (= 25792 (day-13-2)))
       )
     ))

@@ -33,7 +33,7 @@
 (defn- get-y ^Integer [^ints coord]
   (last coord))
 
-(defn- manhattan-distance
+(defn- manhattan-distance ^Integer
   ([^ints from ^ints to] (manhattan-distance
                           (get-x from) (get-y from)
                           (get-x to)   (get-y to)
@@ -53,41 +53,83 @@
                     line)]
     {
      :idx    idx
-     :sensor (make-coord (Integer. sensor-x) (Integer. sensor-y))
-     :beacon (make-coord (Integer. beacon-x) (Integer. beacon-y))
+     :sensor (make-coord (Integer. ^String sensor-x) (Integer. ^String sensor-y))
+     :beacon (make-coord (Integer. ^String beacon-x) (Integer. ^String beacon-y))
      }))
 
 (defn parse-sensor-input [lines]
   ;; TODO consider using a map from :idx to sensor if needed
   (map-indexed parse-sensor-line lines))
 
-(defn filter-out-beacons [sensors coords]
-  (let [beacons (into #{} (map :beacon sensors))]
-    (clojure.set/difference coords beacons)))
-
-(defn- row-chunk [row-y center-x d]
-  (let [r (range (- center-x d) (inc (+ center-x d)))]
-    (into #{} (map #(make-coord % row-y) r))))
-
-(defn build-impossible-location-line [row-y sensors]
+(defn- get-beacons [sensors]
   (->> sensors
-       (reduce (fn [il-set {:keys [sensor beacon]}]
+       (map :beacon)
+       (into #{})
+       ))
+
+(defn- range-size [from to] (inc (- to from)))
+
+(defn- make-range [from to]
+  {
+   :from from
+   :to   to
+   :size (range-size from to)
+   })
+
+(defn- merge-ranges [ranges]
+  (if (<= (count ranges) 1)
+    ranges
+    (let [sorted (sort-by :from ranges)]
+      (reduce (fn [rs r]
+                (let [prev (last rs)]
+                  (if (<= (:from r) (inc (:to prev)))
+                    (let [to (max (:to prev) (:to r))]
+                      (conj (vec (butlast rs)) (assoc prev :to to)))
+                    (conj (vec rs) r))))
+              [(first sorted)]
+              (rest sorted)))))
+
+(defn- range-contains? [{:keys [from to]} v]
+  (<= from v to))
+
+(defn- count-without-beacons [^Integer row-y sensors ranges]
+  (let [beacons (get-beacons sensors)
+        ranges (map (fn [{:keys [from to] :as r}]
+                      (assoc r :size (inc (- to from))))
+                    ranges)
+        counts (map (fn [{:keys [from to size] :as r}]
+                      (let [beacon-count (->> beacons
+                                              (filter (comp (partial = row-y) get-y))
+                                              (map get-x)
+                                              (filter (partial range-contains? r))
+                                              count)]
+                        (- size beacon-count)))
+                    ranges)]
+    (apply + counts)))
+
+(defn count-impossible-row-locations [^Integer row-y sensors]
+  (->> sensors
+       (reduce (fn [ranges {:keys [sensor beacon]}]
                  (let [sensor-x (get-x sensor)
                        sensor-y (get-y sensor)
                        d        (manhattan-distance sensor beacon)
                        dy       (abs (- row-y sensor-y))
-                       rem      (- d dy)
-                       coords   (if (neg? rem) #{} (row-chunk row-y sensor-x rem))]
-                   (clojure.set/union il-set coords)))
+                       rem      (- d dy)]
+                   (if (>= rem 0)
+                     (conj ranges {
+                                   :from (- sensor-x rem)
+                                   :to   (+ sensor-x rem)
+                                   })
+                     ranges)))
                #{})
-       (filter-out-beacons sensors)
+       merge-ranges
+       (count-without-beacons row-y sensors)
        ))
 
 (defn part-1 [input y]
   (->> input
        parse-sensor-input
-       (build-impossible-location-line y)
-       count
+       (count-impossible-row-locations y)
        ))
 
 (defn day-15-1 []

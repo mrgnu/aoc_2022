@@ -9,6 +9,7 @@
       )
 
     (testing "part 2"
+      (is (= 93 (part-2-sand-simulation test-input-14-1)))
       )
     ))
 
@@ -19,5 +20,6 @@
       )
 
     (testing "part 2"
+      (is (= 31706 (day-14-2)))
       )
     ))

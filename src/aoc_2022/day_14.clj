@@ -102,6 +102,35 @@
           (->> cave-map vals (filter (partial = :sand)) count)
           (recur new-cave-map))))))
 
+(defn part-2-sand-fall [cave-map sand-pos floor-y]
+  (loop [sand-pos sand-pos]
+    (let [x     (get-x sand-pos)
+          y     (get-y sand-pos)]
+      (if (= (inc y) floor-y)
+        ;; floor reached
+        (assoc cave-map sand-pos :sand)
+        (let [below (make-coord x (inc y))]
+          (if-not (contains? cave-map below)
+            (recur below)
+            (let [bl (make-coord (dec x) (inc y))]
+              (if-not (contains? cave-map bl)
+                (recur bl)
+                (let [br (make-coord (inc x) (inc y))]
+                  (if-not (contains? cave-map br)
+                    (recur br)
+                    (assoc cave-map sand-pos :sand)))))))))))
+
+(defn part-2-sand-simulation [input]
+  (let [cave-map (read-cave-map input)
+        floor-y (->> cave-map keys (map get-y) sort last (+ 2))]
+    (reduce (fn [cave-map _]
+              (let [cave-map (part-2-sand-fall cave-map sand-start-position floor-y)]
+                (if (= (get cave-map sand-start-position) :sand)
+                  (reduced (->> cave-map vals (filter (partial = :sand)) count))
+                  cave-map)))
+            cave-map
+            (range))))
+
 (defn print-cave-line [cave-map min-x max-x y]
   (reduce (fn [s x]
             (str s
@@ -127,4 +156,5 @@
   )
 
 (defn day-14-2 []
+  (part-2-sand-simulation (input-14-1))
   )

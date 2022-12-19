@@ -75,11 +75,12 @@
                {})
        ))
 
-(defn simulate-sand-fall [cave-map sand-pos max-y]
+(defn part-1-sand-fall [cave-map sand-pos max-y]
   (loop [sand-pos sand-pos]
     (let [x     (get-x sand-pos)
           y     (get-y sand-pos)]
       (if (>= y max-y)
+        ;; abyss reached
         nil
         (let [below (make-coord x (inc y))]
           (if-not (contains? cave-map below)
@@ -92,7 +93,7 @@
                     (recur br)
                     (assoc cave-map sand-pos :sand)))))))))))
 
-(defn run-sand-simulation [input]
+(defn part-1-sand-simulation [input]
   (let [cave-map (read-cave-map input)
         max-y (->> cave-map keys (map get-y) sort last)]
     (loop [cave-map cave-map]
@@ -122,7 +123,7 @@
          (range min-y (inc max-y)))))
 
 (defn day-14-1 []
-  (run-sand-simulation (input-14-1))
+  (part-1-sand-simulation (input-14-1))
   )
 
 (defn day-14-2 []

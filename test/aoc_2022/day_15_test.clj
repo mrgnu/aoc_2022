@@ -9,6 +9,7 @@
       )
 
     (testing "part 2"
+      (is (= (part-2 test-input-15-1 20) 56000011))
       )
     ))
 

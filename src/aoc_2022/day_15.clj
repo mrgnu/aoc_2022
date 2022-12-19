@@ -92,14 +92,28 @@
       (reduce (fn [rs r]
                 (let [prev (last rs)]
                   (if (<= (:from r) (inc (:to prev)))
-                    (let [to (max (:to prev) (:to r))]
-                      (conj (vec (butlast rs)) (assoc prev :to to)))
+                    (let [from (min (:from prev) (:from r))
+                          to   (max (:to prev) (:to r))]
+                      (conj (vec (butlast rs))
+                            (make-range from to)))
                     (conj (vec rs) r))))
               [(first sorted)]
               (rest sorted)))))
 
 (defn- range-contains? [{:keys [from to]} v]
   (<= from v to))
+
+(defn- crop-range [min-val max-val {:keys [from to size] :as r}]
+  (cond
+    (< to   min-val) nil
+    (> from max-val) nil
+    :else (make-range (max min-val from) (min max-val to))))
+
+(defn- crop-ranges [min-val max-val ranges]
+  (->> ranges
+       (map (partial crop-range min-val max-val))
+       (filter identity)
+       ))
 
 (defn- split-range [{:keys [from to size] :as r} v]
   (cond
@@ -112,21 +126,6 @@
      (make-range from (dec v))
      (make-range (inc v) to)
      ]))
-
-(defn- count-without-beacons [^Integer row-y sensors ranges]
-  (let [beacons (get-beacons sensors)
-        ranges (map (fn [{:keys [from to] :as r}]
-                      (assoc r :size (inc (- to from))))
-                    ranges)
-        counts (map (fn [{:keys [from to size] :as r}]
-                      (let [beacon-count (->> beacons
-                                              (filter (comp (partial = row-y) get-y))
-                                              (map get-x)
-                                              (filter (partial range-contains? r))
-                                              count)]
-                        (- size beacon-count)))
-                    ranges)]
-    (apply + counts)))
 
 (defn- get-x-range
   "returns range of points on row defined by row-y
@@ -150,7 +149,8 @@
                    (conj ranges r)
                    ranges))
                #{})
-       merge-ranges))
+       merge-ranges
+       ))
 
 (defn collect-impossible-ranges [^Integer row-y sensors]
   (let [row-beacons (->> sensors
@@ -160,8 +160,8 @@
     (reduce (fn [rs beacon-x]
               (apply concat
                      (map #(split-range % beacon-x) rs)))
-               ranges
-               (map get-x row-beacons))))
+            ranges
+            (map get-x row-beacons))))
 
 (defn part-1 [input y]
   (->> input
@@ -175,5 +175,49 @@
   (part-1 (input-15-1) 2000000)
   )
 
+(defn- has-unique-gap? [min-val max-val ranges]
+  (let [cropped (crop-ranges min-val max-val ranges)
+        cropped (sort-by :from cropped)]
+    (cond
+      ;; can't have a single one size gap with more than two regions
+      (> (count cropped) 2) nil
+      ;; gap must be internal
+      (= (count cropped) 2)
+      (let [f (first cropped)
+            s (last  cropped)]
+        (when (and (= min-val (:from f))
+                   (= max-val (:to   s))
+                   (= 2 (- (:from s) (:to f))))
+          (inc (:to f))))
+      :else
+      ;; single range
+      (let [{:keys [from to]} (first cropped)]
+        (cond
+          (and (= from (inc min-val))
+               (= to   max-val))
+          min-val
+
+          (and (= from min-val)
+               (= to   (dec max-val)))
+          max-val
+
+          :else nil)))))
+
+(defn- compute-tuning-frequency [coord]
+  (+ (* (get-x coord) 4000000)
+     (get-y coord)))
+
+(defn part-2 [input max-val]
+  (let [sensors (parse-sensor-input input)
+        y-range (range 0 (inc max-val))
+        coord   (reduce (fn [_ y]
+                          (let [ranges (get-x-ranges y sensors)]
+                            (when-let [x (has-unique-gap? 0 max-val ranges)]
+                              (reduced (make-coord x y)))))
+                        nil
+                        y-range)]
+    (compute-tuning-frequency coord)))
+
 (defn day-15-2 []
+  (part-2 (input-15-1) 4000000)
   )

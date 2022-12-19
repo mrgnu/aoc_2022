@@ -15,6 +15,8 @@
 (defn- make-coord ^ints [^Integer x ^Integer y]
   [x y])
 
+(def sand-start-position (make-coord 500 0))
+
 (defn- get-x ^Integer [^ints coord]
   (first coord))
 
@@ -73,7 +75,54 @@
                {})
        ))
 
+(defn simulate-sand-fall [cave-map sand-pos max-y]
+  (loop [sand-pos sand-pos]
+    (let [x     (get-x sand-pos)
+          y     (get-y sand-pos)]
+      (if (>= y max-y)
+        nil
+        (let [below (make-coord x (inc y))]
+          (if-not (contains? cave-map below)
+            (recur below)
+            (let [bl (make-coord (dec x) (inc y))]
+              (if-not (contains? cave-map bl)
+                (recur bl)
+                (let [br (make-coord (inc x) (inc y))]
+                  (if-not (contains? cave-map br)
+                    (recur br)
+                    (assoc cave-map sand-pos :sand)))))))))))
+
+(defn run-sand-simulation [input]
+  (let [cave-map (read-cave-map input)
+        max-y (->> cave-map keys (map get-y) sort last)]
+    (loop [cave-map cave-map]
+      (let [new-cave-map (simulate-sand-fall cave-map sand-start-position max-y)]
+        (if-not new-cave-map
+          (->> cave-map vals (filter (partial = :sand)) count)
+          (recur new-cave-map))))))
+
+(defn print-cave-line [cave-map min-x max-x y]
+  (reduce (fn [s x]
+            (str s
+                 (condp = (get cave-map (make-coord x y))
+                   :rock "#"
+                   :sand "o"
+                   ".")))
+          ""
+          (range min-x (inc max-x))))
+
+(defn print-cave-map [cave-map]
+  (let [
+        min-x (->> cave-map keys (map get-x) sort first)
+        max-x (->> cave-map keys (map get-x) sort last)
+        min-y (->> cave-map keys (map get-y) sort first)
+        max-y (->> cave-map keys (map get-y) sort last)
+        ]
+    (map (partial print-cave-line cave-map min-x max-x)
+         (range min-y (inc max-y)))))
+
 (defn day-14-1 []
+  (run-sand-simulation (input-14-1))
   )
 
 (defn day-14-2 []

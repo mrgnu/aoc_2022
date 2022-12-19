@@ -76,6 +76,15 @@
    :size (range-size from to)
    })
 
+(defn- range-size [from to] (inc (- to from)))
+
+(defn- make-range [from to]
+  {
+   :from from
+   :to   to
+   :size (range-size from to)
+   })
+
 (defn- merge-ranges [ranges]
   (if (<= (count ranges) 1)
     ranges
@@ -92,6 +101,18 @@
 (defn- range-contains? [{:keys [from to]} v]
   (<= from v to))
 
+(defn- split-range [{:keys [from to size] :as r} v]
+  (cond
+    (not (range-contains? r v)) [r]
+    (= 1 size) []
+    (= v from) [(make-range (inc from) to)]
+    (= v to)   [(make-range from (dec to))]
+    :else
+    [
+     (make-range from (dec v))
+     (make-range (inc v) to)
+     ]))
+
 (defn- count-without-beacons [^Integer row-y sensors ranges]
   (let [beacons (get-beacons sensors)
         ranges (map (fn [{:keys [from to] :as r}]
@@ -107,29 +128,47 @@
                     ranges)]
     (apply + counts)))
 
-(defn count-impossible-row-locations [^Integer row-y sensors]
+(defn- get-x-range
+  "returns range of points on row defined by row-y
+  reachable from sensor
+  within manhattan distance between sensor and beacon"
+  [^Integer row-y ^ints sensor ^ints beacon]
+  (let [sensor-x (get-x sensor)
+        sensor-y (get-y sensor)
+        d        (manhattan-distance sensor beacon)
+        dy       (abs (- row-y sensor-y))
+        rem      (- d dy)]
+    (when (>= rem 0)
+      (let [from (- sensor-x rem)
+            to   (+ sensor-x rem)]
+        (make-range from to)))))
+
+(defn- get-x-ranges [^Integer row-y sensors]
   (->> sensors
        (reduce (fn [ranges {:keys [sensor beacon]}]
-                 (let [sensor-x (get-x sensor)
-                       sensor-y (get-y sensor)
-                       d        (manhattan-distance sensor beacon)
-                       dy       (abs (- row-y sensor-y))
-                       rem      (- d dy)]
-                   (if (>= rem 0)
-                     (conj ranges {
-                                   :from (- sensor-x rem)
-                                   :to   (+ sensor-x rem)
-                                   })
-                     ranges)))
+                 (if-let [r (get-x-range row-y sensor beacon)]
+                   (conj ranges r)
+                   ranges))
                #{})
-       merge-ranges
-       (count-without-beacons row-y sensors)
-       ))
+       merge-ranges))
+
+(defn collect-impossible-ranges [^Integer row-y sensors]
+  (let [row-beacons (->> sensors
+                         get-beacons
+                         (filter (comp (partial = row-y) get-y)))
+        ranges      (get-x-ranges row-y sensors)]
+    (reduce (fn [rs beacon-x]
+              (apply concat
+                     (map #(split-range % beacon-x) rs)))
+               ranges
+               (map get-x row-beacons))))
 
 (defn part-1 [input y]
   (->> input
        parse-sensor-input
-       (count-impossible-row-locations y)
+       (collect-impossible-ranges y)
+       (map :size)
+       (apply +)
        ))
 
 (defn day-15-1 []

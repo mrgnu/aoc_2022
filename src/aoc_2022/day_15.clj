@@ -33,6 +33,20 @@
 (defn- get-y ^Integer [^ints coord]
   (last coord))
 
+(defn- manhattan-distance
+  ([^ints from ^ints to] (manhattan-distance
+                          (get-x from) (get-y from)
+                          (get-x to)   (get-y to)
+                          ))
+
+  ([
+    ^Integer from-x ^Integer from-y
+    ^Integer to-x   ^Integer to-y
+    ]
+   (+ (abs (- to-x from-x))
+      (abs (- to-y from-y))))
+  )
+
 (defn- parse-sensor-line [idx line]
   (let [[_ sensor-x sensor-y beacon-x beacon-y]
         (re-matches #"Sensor at x=([+-]?\d+), y=([+-]?\d+): closest beacon is at x=([+-]?\d+), y=([+-]?\d+)"
@@ -44,9 +58,40 @@
      }))
 
 (defn parse-sensor-input [lines]
+  ;; TODO consider using a map from :idx to sensor if needed
   (map-indexed parse-sensor-line lines))
 
+(defn filter-out-beacons [sensors coords]
+  (let [beacons (into #{} (map :beacon sensors))]
+    (clojure.set/difference coords beacons)))
+
+(defn- row-chunk [row-y center-x d]
+  (let [r (range (- center-x d) (inc (+ center-x d)))]
+    (into #{} (map #(make-coord % row-y) r))))
+
+(defn build-impossible-location-line [row-y sensors]
+  (->> sensors
+       (reduce (fn [il-set {:keys [sensor beacon]}]
+                 (let [sensor-x (get-x sensor)
+                       sensor-y (get-y sensor)
+                       d        (manhattan-distance sensor beacon)
+                       dy       (abs (- row-y sensor-y))
+                       rem      (- d dy)
+                       coords   (if (neg? rem) #{} (row-chunk row-y sensor-x rem))]
+                   (clojure.set/union il-set coords)))
+               #{})
+       (filter-out-beacons sensors)
+       ))
+
+(defn part-1 [input y]
+  (->> input
+       parse-sensor-input
+       (build-impossible-location-line y)
+       count
+       ))
+
 (defn day-15-1 []
+  (part-1 (input-15-1) 2000000)
   )
 
 (defn day-15-2 []

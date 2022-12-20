@@ -1,5 +1,7 @@
 (ns aoc-2022.day-15
-  (:require [aoc-2022.utils :as utils])
+  (:require [aoc-2022.utils :as utils]
+            [aoc-2022.range :as r]
+            )
   )
 
 (def test-input-15-1
@@ -67,66 +69,6 @@
        (into #{})
        ))
 
-(defn- range-size [from to] (inc (- to from)))
-
-(defn- make-range [from to]
-  {
-   :from from
-   :to   to
-   :size (range-size from to)
-   })
-
-(defn- range-size [from to] (inc (- to from)))
-
-(defn- make-range [from to]
-  {
-   :from from
-   :to   to
-   :size (range-size from to)
-   })
-
-(defn- merge-ranges [ranges]
-  (if (<= (count ranges) 1)
-    ranges
-    (let [sorted (sort-by :from ranges)]
-      (reduce (fn [rs r]
-                (let [prev (last rs)]
-                  (if (<= (:from r) (inc (:to prev)))
-                    (let [from (min (:from prev) (:from r))
-                          to   (max (:to prev) (:to r))]
-                      (conj (vec (butlast rs))
-                            (make-range from to)))
-                    (conj (vec rs) r))))
-              [(first sorted)]
-              (rest sorted)))))
-
-(defn- range-contains? [{:keys [from to]} v]
-  (<= from v to))
-
-(defn- crop-range [min-val max-val {:keys [from to size] :as r}]
-  (cond
-    (< to   min-val) nil
-    (> from max-val) nil
-    :else (make-range (max min-val from) (min max-val to))))
-
-(defn- crop-ranges [min-val max-val ranges]
-  (->> ranges
-       (map (partial crop-range min-val max-val))
-       (filter identity)
-       ))
-
-(defn- split-range [{:keys [from to size] :as r} v]
-  (cond
-    (not (range-contains? r v)) [r]
-    (= 1 size) []
-    (= v from) [(make-range (inc from) to)]
-    (= v to)   [(make-range from (dec to))]
-    :else
-    [
-     (make-range from (dec v))
-     (make-range (inc v) to)
-     ]))
-
 (defn- get-x-range
   "returns range of points on row defined by row-y
   reachable from sensor
@@ -140,7 +82,7 @@
     (when (>= rem 0)
       (let [from (- sensor-x rem)
             to   (+ sensor-x rem)]
-        (make-range from to)))))
+        (r/make-range from to)))))
 
 (defn- get-x-ranges [^Integer row-y sensors]
   (->> sensors
@@ -149,7 +91,7 @@
                    (conj ranges r)
                    ranges))
                #{})
-       merge-ranges
+       r/merge-ranges
        ))
 
 (defn collect-impossible-ranges [^Integer row-y sensors]
@@ -159,7 +101,7 @@
         ranges      (get-x-ranges row-y sensors)]
     (reduce (fn [rs beacon-x]
               (apply concat
-                     (map #(split-range % beacon-x) rs)))
+                     (map #(r/split-range % beacon-x) rs)))
             ranges
             (map get-x row-beacons))))
 
@@ -176,7 +118,7 @@
   )
 
 (defn- has-unique-gap? [min-val max-val ranges]
-  (let [cropped (crop-ranges min-val max-val ranges)
+  (let [cropped (r/crop-ranges min-val max-val ranges)
         cropped (sort-by :from cropped)]
     (cond
       ;; can't have a single one size gap with more than two regions
